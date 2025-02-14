@@ -1,0 +1,3 @@
+fastapi
+snowflake-snowpark-python
+uvicorn
