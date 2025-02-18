@@ -1,0 +1,28 @@
+USE ROLE ACCOUNTADMIN;
+CREATE DATABASE API;
+USE SCHEMA PUBLIC;
+CREATE OR REPLACE TABLE REQUESTS (
+    REQUEST_TS DATE,
+    JG_ID NUMBER,
+    USER TEXT,
+    ANSWER TEXT,
+    ATTEMPT NUMBER,
+    CORRECT BOOLEAN
+);
+
+CREATE VIEW POINTS AS
+  WITH RankedAnswers AS (
+      SELECT
+          USER,
+          JG_ID,
+          CORRECT,
+          ROW_NUMBER() OVER (ORDER BY JG_ID) AS Rank,
+          COUNT(*) OVER () AS TotalCorrectAnswers
+      FROM REQUESTS
+      WHERE CORRECT = TRUE
+  )
+  SELECT
+      USER,
+      100 - (Rank - 1) * (50 / (TotalCorrectAnswers - 1)) AS POINTS
+  FROM RankedAnswers
+  ORDER BY Rank;

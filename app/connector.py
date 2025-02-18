@@ -1,19 +1,28 @@
 import os
-import snowflake.connector
+import snowflake.connector as sc
 
-def connect() -> snowflake.connector.SnowflakeConnection:
+private_key_path = os.environ.get("PRIVATE_KEY_PATH")
+
+def connect():
     creds = {
-        'host': os.getenv('SNOWFLAKE_HOST'),
-        'port': os.getenv('SNOWFLAKE_PORT'),
-        'protocol': "https",
-        'account': os.getenv('SNOWFLAKE_ACCOUNT'),
-        'authenticator': "oauth",
-        'token': open('/snowflake/session/token', 'r').read(),
-        'warehouse': os.getenv('SNOWFLAKE_WAREHOUSE'),
-        'database': os.getenv('SNOWFLAKE_DATABASE'),
-        'schema': os.getenv('SNOWFLAKE_SCHEMA'),
-        'client_session_keep_alive': True
+        'user':'SERV_API',
+        'account':'sfseeurope-acombes_jg_aws',
+        'warehouse':'API_WH',
+        'database':'API',
+        'schema':'PUBLIC',
+        'private_key_file':private_key_path
     }
-    return snowflake.connector.connect(**creds)
+    return sc.connect(**creds)
 
-conn = connect()
+if __name__ == "__main__":
+    ctx = connect()
+    cursor = ctx.cursor()
+
+    try:
+        cursor.execute("SELECT current_user(), current_role()")
+        print('current user and role :\n',cursor.fetchone())
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        cursor.close()
+        ctx.close()
