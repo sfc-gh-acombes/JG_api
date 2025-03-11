@@ -1,5 +1,6 @@
 USE ROLE ACCOUNTADMIN;
 CREATE DATABASE API;
+
 USE SCHEMA PUBLIC;
 CREATE OR REPLACE TABLE REQUESTS (
     REQUEST_TS DATE,
@@ -23,6 +24,6 @@ CREATE VIEW POINTS AS
   )
   SELECT
       USER,
-      100 - (Rank - 1) * (50 / (TotalCorrectAnswers - 1)) AS POINTS
+      ROUND(100 - (Rank - 1) * (50 / (TotalCorrectAnswers - 1))) AS POINTS
   FROM RankedAnswers
   ORDER BY Rank;

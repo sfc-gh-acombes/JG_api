@@ -1,23 +1,26 @@
 from connector import connect
 from fastapi import FastAPI, Request
+import ngrok
 import os
 
 api_password = os.environ.get("API_PASSWORD")
 jg_id = int(os.environ.get("JG_ID"))
 correct_answer = os.environ.get("CORRECT_ANSWER")
+port = os.environ.get("PORT")
 
 app = FastAPI(title="Jeudis Givres API", version="1.0.0")
 
+listener = ngrok.forward(f"localhost:{port}", authtoken_from_env=True)
+
 @app.get("/")
 def root(request: Request):
+
     endpoints = {
         "To see current ladder [GET]": f"{request.url}ladder",
         "To submit your answer [GET]": f"{request.url}submit"
     }
-
     return {
         "API_status": "running",
-        "API Documentation": f"{request.url}docs",
         "Available endpoints": endpoints,
     }
 
@@ -28,12 +31,11 @@ def ladder():
     try:
         cursor.execute("SELECT * FROM POINTS LIMIT 100")
         ladder = cursor.fetchall()
+        return ladder
     except Exception as e:
         print(f"Error: {e}")
-    finally:
-        cursor.close()
-        ctx.close()
-    return ladder
+        return {"error": "internal error, see server logs"}
+
 
 @app.get("/submit")
 def submit(password,user,answer):
@@ -51,7 +53,7 @@ def submit(password,user,answer):
             )
         attempt = cursor.fetchone()[0]
 
-        if attempt < 5:
+        if attempt <= 5:
             cursor.execute(
                 f"""
                 INSERT INTO REQUESTS
@@ -65,8 +67,6 @@ def submit(password,user,answer):
                 return {"message":"try again, remaining attempts: "+str(5-attempt)}
         else:
             return {"error":"maximum attempts reached"}
-        cursor.close()
-        ctx.close()
 
     else:
         return {"error":"incorrect password"}

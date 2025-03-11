@@ -1,6 +1,8 @@
 import os
 import snowflake.connector as sc
+import logging
 
+logging.getLogger('snowflake.connector.connection').setLevel(logging.WARNING)
 private_key_path = os.environ.get("PRIVATE_KEY_PATH")
 
 def connect():
